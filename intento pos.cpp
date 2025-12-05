@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <sstream>
 
 //creamos la estructura para los datos de las personas
 struct datos
@@ -34,6 +35,7 @@ void crear_clientes(std::vector <datos>& personas);
 void crear_producto(std::vector <dat_producto>& producto);
 void crear_categoria(std::vector <categorias>& categoria);
 void guardar(std::vector <datos>& personas , std::vector <dat_producto>& producto , std::vector <categorias>& categoria);
+void cargar(std::vector <datos>& personas , std::vector <dat_producto>& producto , std::vector <categorias>& categoria);
 
 
 int main()
@@ -51,7 +53,7 @@ int main()
     while(true)
     {
         std::cout<<"que quieres hacer \n 1. crear clientes \n";
-        std::cout<<" 2. crear productos \n 3. crear categorias \n 4. guardar datos \n 5. Salir \n"; 
+        std::cout<<" 2. crear productos \n 3. crear categorias \n 4. guardar datos \n 5. cargar datos \n 6. salir \n"; 
         //validamos que la entrada sea un numero , si no limpiamos el error y volvemos a preguntar
         if (!(std::cin >> opcion)) {
             std::cout << "ERROR: Opcion no valida.\n";
@@ -79,7 +81,7 @@ int main()
             	break;
             // salir del bucle
             case 5:
-            	cargar(personas , producto , categoria)
+            	cargar(personas , producto , categoria);
             case 6:
                 std::cout << "Saliendo del programa...\n";
                 return 0; // Terminar el programa
@@ -248,13 +250,13 @@ void guardar(std::vector <datos>& personas , std::vector <dat_producto>& product
 	//guardado de las variables de clientes
 	//abrir el archivo de clientes
 	
-	std::ofstream archivo_clientes("clientesCVS.txt");
+	std::ofstream archivo_clientes("clientesCSV.txt");
 	//verificar que se abrio
 	if (!archivo_clientes.is_open()) {
-        std::cout << "ERROR NO SE PUDO ABRIR EL ARCHIVO clientesCVS.txt ";
+        std::cout << "ERROR NO SE PUDO ABRIR EL ARCHIVO clientesCSV.txt ";
         std::cin.ignore();
         std::cin.get();
-        main();
+        return;
     }
     //forma moderna de aceder a vectores
     for (const auto& cliente : personas){
@@ -267,9 +269,9 @@ void guardar(std::vector <datos>& personas , std::vector <dat_producto>& product
 	
 	//gurdar las variables de categorias
 	
-	std::ofstream archivo_categoria("categoriaCVS.txt");
+	std::ofstream archivo_categoria("categoriaCSV.txt");
 	if (!archivo_categoria.is_open()) {
-        std::cout << "ERROR NO SE PUDO ABRIR EL ARCHIVO categoriasCVS.txt ";
+        std::cout << "ERROR NO SE PUDO ABRIR EL ARCHIVO categoriasCSV.txt ";
         main();
     }
     for (const auto& cat : categoria){
@@ -279,9 +281,9 @@ void guardar(std::vector <datos>& personas , std::vector <dat_producto>& product
 	archivo_categoria.close();
 	
 	//guardas las variables de productos
-	std::ofstream archivo_productos("productosCVS.txt");
+	std::ofstream archivo_productos("productosCSV.txt");
 	if (!archivo_productos.is_open()) {
-        std::cout << "ERROR NO SE PUDO ABRIR EL ARCHIVO productosCVS.txt ";
+        std::cout << "ERROR NO SE PUDO ABRIR EL ARCHIVO productosCSV.txt ";
         main();
     }
     for (const auto& item : producto){
@@ -305,8 +307,8 @@ void cargar(std::vector <datos>& personas , std::vector <dat_producto>& producto
     
     std::cout << "CARGANDO DATOS \n";
     //CATEGORIAS
-    std::ifstream archivo_categoria("categoriaCVS.txt");
-    if (!archivo_categoria.is_open()) std::cout << "ERROR NO SE PUDO ABRIR categoriaCVS.txt\n";
+    std::ifstream archivo_categoria("categoriaCSV.txt");
+    if (!archivo_categoria.is_open()) std::cout << "ERROR NO SE PUDO ABRIR categoriaCSV.txt\n";
     else {
         // leer linea por linea
         while (std::getline(archivo_categoria, linea)) {
@@ -332,8 +334,8 @@ void cargar(std::vector <datos>& personas , std::vector <dat_producto>& producto
 
 
     //CLIENTES
-    std::ifstream archivo_clientes("clientesCVS.txt");
-    if (!archivo_clientes.is_open()) std::cout << "Error: No se pudo abrir el archivo clientesCVS.txt \n";
+    std::ifstream archivo_clientes("clientesCSV.txt");
+    if (!archivo_clientes.is_open()) std::cout << "Error: No se pudo abrir el archivo clientesCSV.txt \n";
     else {
     	//leer uno por uno
     	while (std::getline(archivo_clientes, linea)) {
@@ -341,20 +343,20 @@ void cargar(std::vector <datos>& personas , std::vector <dat_producto>& producto
             std::stringstream aux(linea);
             datos pers_aux;
             //nombre y apellido salen derecho
-            std::getline(ss, pers_aux.nombre, ',');
-            std::getline(ss, pers_aux.apellido, ',');
+            std::getline(aux, pers_aux.nombre, ',');
+            std::getline(aux, pers_aux.apellido, ',');
             //id
-            std::getline(ss, campo, ',');
+            std::getline(aux, campo, ',');
             //string to long long =stoll
             pers_aux.id = std::stoll(campo);
             //edad
-            std::getline(ss, campo, ',');
+            std::getline(aux, campo, ',');
             pers_aux.edad = std::stoi(campo);
             //genero solo es un carcter sale  derecho
-            std::getline(ss, campo, ',');
+            std::getline(aux, campo, ',');
             pers_aux.genero = campo[0];
             //telefono ya no quedan comas
-            std::getline(ss, campo);
+            std::getline(aux, campo);
             pers_aux.telefono = std::stoll(campo);
             //almacenar en el vector
             personas.push_back(pers_aux);
@@ -362,33 +364,29 @@ void cargar(std::vector <datos>& personas , std::vector <dat_producto>& producto
         archivo_clientes.close();
         std::cout << "CLIENTES CARGADOS";
     }
-    
-    
-    
-//_______________________________________________________________________//
-    // --- PARTE C: Cargar Productos (Las categorías YA existen) ---
-    std::ifstream archivo_productos("productosCVS.txt");
+    //Cargar Productos (Las categorias ya existen)
+    std::ifstream archivo_productos("productosCSV.txt");
     if (!archivo_productos.is_open()) {
-        std::cout << "Error: No se pudo abrir el archivo productosCVS.txt \n";
+        std::cout << "Error: No se pudo abrir el archivo productosCSV.txt \n";
     } else {
         while (std::getline(archivo_productos, linea)) {
             if (linea.empty()) continue;
             
-            std::stringstream ss(linea);
+            std::stringstream aux(linea);
             dat_producto prodTemporal;
             int idCategoriaLeido; // ID temporal de la categoría
 
-            std::getline(ss, prodTemporal.nombre, ',');
+            std::getline(aux, prodTemporal.nombre, ',');
             
-            std::getline(ss, campo, ',');
+            std::getline(aux, campo, ',');
             prodTemporal.id = std::stoll(campo);
             
-            std::getline(ss, prodTemporal.descripcion, ',');
+            std::getline(aux, prodTemporal.descripcion, ',');
             
-            std::getline(ss, campo, ',');
+            std::getline(aux, campo, ',');
             prodTemporal.cantidad = std::stoi(campo);
 
-            std::getline(ss, campo); // Leemos el ID de la categoría
+            std::getline(aux, campo); // Leemos el ID de la categoría
             idCategoriaLeido = std::stoi(campo);
 
             // ¡LÓGICA CLAVE! Buscamos la categoría completa en el vector 'categoria'
