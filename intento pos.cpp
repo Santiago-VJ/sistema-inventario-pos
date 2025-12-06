@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 #include <sstream>
+#include <stdexcept>
 
 //creamos la estructura para los datos de las personas
 struct datos
@@ -82,6 +83,7 @@ int main()
             // salir del bucle
             case 5:
             	cargar(personas , producto , categoria);
+            	break;
             case 6:
                 std::cout << "Saliendo del programa...\n";
                 return 0; // Terminar el programa
@@ -272,7 +274,7 @@ void guardar(std::vector <datos>& personas , std::vector <dat_producto>& product
 	std::ofstream archivo_categoria("categoriaCSV.txt");
 	if (!archivo_categoria.is_open()) {
         std::cout << "ERROR NO SE PUDO ABRIR EL ARCHIVO categoriasCSV.txt ";
-        main();
+        return;
     }
     for (const auto& cat : categoria){
 		archivo_categoria<<cat.id<<","<<cat.nombre<<","<<cat.descripcion<<",";
@@ -284,7 +286,7 @@ void guardar(std::vector <datos>& personas , std::vector <dat_producto>& product
 	std::ofstream archivo_productos("productosCSV.txt");
 	if (!archivo_productos.is_open()) {
         std::cout << "ERROR NO SE PUDO ABRIR EL ARCHIVO productosCSV.txt ";
-        main();
+        return;
     }
     for (const auto& item : producto){
 		archivo_productos<<item.nombre<<","<<item.id<<","<<item.descripcion<<",";
@@ -308,7 +310,11 @@ void cargar(std::vector <datos>& personas , std::vector <dat_producto>& producto
     std::cout << "CARGANDO DATOS \n";
     //CATEGORIAS
     std::ifstream archivo_categoria("categoriaCSV.txt");
-    if (!archivo_categoria.is_open()) std::cout << "ERROR NO SE PUDO ABRIR categoriaCSV.txt\n";
+    if (!archivo_categoria.is_open()) 
+	{
+		std::cout << "ERROR NO SE PUDO ABRIR categoriaCSV.txt\n";
+		return;
+	}
     else {
         // leer linea por linea
         while (std::getline(archivo_categoria, linea)) {
@@ -342,22 +348,58 @@ void cargar(std::vector <datos>& personas , std::vector <dat_producto>& producto
     		//flujo de la cadena y struc
             std::stringstream aux(linea);
             datos pers_aux;
-            //nombre y apellido salen derecho
+            //nombre y apellido
             std::getline(aux, pers_aux.nombre, ',');
             std::getline(aux, pers_aux.apellido, ',');
             //id
             std::getline(aux, campo, ',');
             //string to long long =stoll
-            pers_aux.id = std::stoll(campo);
+            try{
+            	if(!campo.empty()) pers_aux.id = std::stoll(campo);
+            	else pers_aux.id = 0;
+            	// std::exception atrapa casi cualquier error estándar
+			}   
+			catch (const std::exception& e) {
+            	//mostrar error
+ 				std::cerr << "[ALERTA] Error leyendo id en linea: " << linea << "\n";
+ 				//razon dele error 
+ 				std::cerr << "       Motivo: " << e.what() << "\n";
+ 				//solucion trivial del error
+  				pers_aux.id = 0;
+			}
             //edad
             std::getline(aux, campo, ',');
-            pers_aux.edad = std::stoi(campo);
+            try{
+            	if(!campo.empty()) pers_aux.edad = std::stoi(campo);
+            	else pers_aux.edad = 0;
+			}
+			// std::exception atrapa casi cualquier error estándar
+            catch (const std::exception& e) {
+           		//mostrar error
+ 				std::cerr << "[ALERTA] Error leyendo edad en linea: " << linea << "\n";
+ 			   //razon dele error 
+ 			   std::cerr << "       Motivo: " << e.what() << "\n";
+ 			   //solucion trivial del error
+  				  pers_aux.edad = 0;
+  			}
             //genero solo es un carcter sale  derecho
             std::getline(aux, campo, ',');
             pers_aux.genero = campo[0];
             //telefono ya no quedan comas
             std::getline(aux, campo);
-            pers_aux.telefono = std::stoll(campo);
+            try{
+            	if(!campo.empty()) pers_aux.telefono = std::stoll(campo);
+            	else pers_aux.telefono = 0;
+			}
+			// std::exception atrapa casi cualquier error estándar
+           	catch (const std::exception& e) {
+            	//mostrar error
+ 				std::cerr << "[ALERTA] Error leyendo telefono en linea: " << linea << "\n";
+ 			   //razon dele error 
+ 			   std::cerr << "       Motivo: " << e.what() << "\n";
+ 			   //solucion trivial del error
+  			   pers_aux.telefono = 0;
+			}
             //almacenar en el vector
             personas.push_back(pers_aux);
         }
